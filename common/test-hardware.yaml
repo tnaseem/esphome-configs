@@ -1,0 +1,31 @@
+# Hardware test config for M5Stack AtomS3 Lite
+# Tests the onboard RGB LED (GPIO35) and User Button (GPIO41).
+# Include this as a package to validate hardware on a new device.
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: status_led
+    name: "Status LED"
+    pin: GPIO35
+    num_leds: 1
+    rmt_channel: 0
+    rgb_order: GRB
+    chipset: SK6812
+    effects:
+      - pulse:
+          name: "Slow Pulse"
+          transition_length: 1s
+          update_interval: 2s
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO41
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "User Button"
+    on_press:
+      then:
+        - light.toggle: status_led

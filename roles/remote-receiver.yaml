@@ -1,0 +1,3 @@
+remote_receiver:
+  pin: GPIO2
+  dump: all

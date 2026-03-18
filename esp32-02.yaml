@@ -1,0 +1,12 @@
+substitutions:
+  device_name: esp32-02
+  device_ip: 192.168.1.23
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${device_name}
+
+packages:
+  base: !include common/base.yaml
+  wifi: !include common/wifi.yaml
+  role: !include roles/bluetooth-proxy.yaml

@@ -32,6 +32,18 @@ By moving away from the Home Assistant ESPHome Add-on, this project allows for:
 └── README.md
 ```
 
+## 📖 Documentation
+
+Detailed documentation is in the [`docs/`](docs/) folder:
+
+| Document | Description |
+|----------|-------------|
+| [`docs/architecture/overview.md`](docs/architecture/overview.md) | Package layers, GPIO map, flashing, secrets |
+| [`docs/features/stairlift-control.md`](docs/features/stairlift-control.md) | Stairlift IR control — HA switches and button test role |
+| [`docs/features/hardware-test.md`](docs/features/hardware-test.md) | LED and button hardware smoke-test package |
+| [`docs/devices/esp32-01.md`](docs/devices/esp32-01.md) | esp32-01 device summary (stairlift control) |
+| [`docs/devices/esp32-02.md`](docs/devices/esp32-02.md) | esp32-02 device summary (Bluetooth proxy) |
+
 ## 🔧 Device Configuration
 
 Each device file is minimal — it declares only what is unique to that device:

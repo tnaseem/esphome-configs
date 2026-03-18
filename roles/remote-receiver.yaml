@@ -1,3 +1,9 @@
 remote_receiver:
-  pin: GPIO2
-  dump: all
+  pin:
+    number: GPIO2
+    inverted: true   # KY-022 is active-LOW
+    mode:
+      input: true
+  dump: raw
+  filter: 50us
+  idle: 10ms

@@ -1,0 +1,100 @@
+# Stairlift control — Home Assistant only (no physical button).
+# IR transmitter: KY-005 (HW-483) on Grove port, S → GPIO2.
+#
+# Confirmed working IR codes (38 kHz, raw timings in µs, positive = mark):
+#   DOWN: [851, -1919, 462, -992, 851]
+#         mark 851 µs, space 1919 µs, mark 462 µs, space 992 µs, mark 851 µs
+#   UP:   [852, -1918, 462, -1917, 461]
+#         mark 852 µs, space 1918 µs, mark 462 µs, space 1917 µs, mark 461 µs
+#
+# Direction is encoded in the second space + final mark:
+#   DOWN → second space ~992 µs (short), final mark ~851 µs (long)
+#   UP   → second space ~1917 µs (long), final mark ~461 µs (short)
+#
+# Home Assistant entities:
+#   switch.esp32_01_stairlift_up   — turn ON to move up,   turn OFF to stop
+#   switch.esp32_01_stairlift_down — turn ON to move down, turn OFF to stop
+#
+# Safety interlock: turning either switch ON automatically turns the other OFF.
+remote_transmitter:
+  pin: GPIO2
+  carrier_duty_percent: 50%
+
+globals:
+  # 0 = stopped, 1 = up, 2 = down
+  - id: stairlift_direction
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Continuous repeat interval — fires every 35 ms, matching the original
+# remote's repeat cadence. Only transmits when direction flag is set.
+# ──────────────────────────────────────────────────────────────────────────────
+interval:
+  - interval: 35ms
+    then:
+      - if:
+          condition:
+            lambda: 'return id(stairlift_direction) == 1;'
+          then:
+            - remote_transmitter.transmit_raw:
+                carrier_frequency: 38kHz
+                code: [852, -1918, 462, -1917, 461]
+      - if:
+          condition:
+            lambda: 'return id(stairlift_direction) == 2;'
+          then:
+            - remote_transmitter.transmit_raw:
+                carrier_frequency: 38kHz
+                code: [851, -1919, 462, -992, 851]
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Home Assistant switches
+# ──────────────────────────────────────────────────────────────────────────────
+switch:
+  - platform: template
+    name: "Stairlift Up"
+    id: stairlift_up_switch
+    optimistic: true
+    turn_on_action:
+      # Silence transmitter immediately to close the 35 ms race window
+      - globals.set:
+          id: stairlift_direction
+          value: '0'
+      # Safety interlock: stop DOWN before starting UP
+      - switch.turn_off: stairlift_down_switch
+      - delay: 50ms
+      - globals.set:
+          id: stairlift_direction
+          value: '1'
+    turn_off_action:
+      - globals.set:
+          id: stairlift_direction
+          value: '0'
+      - switch.template.publish:
+          id: stairlift_up_switch
+          state: OFF
+
+  - platform: template
+    name: "Stairlift Down"
+    id: stairlift_down_switch
+    optimistic: true
+    turn_on_action:
+      # Silence transmitter immediately to close the 35 ms race window
+      - globals.set:
+          id: stairlift_direction
+          value: '0'
+      # Safety interlock: stop UP before starting DOWN
+      - switch.turn_off: stairlift_up_switch
+      - delay: 50ms
+      - globals.set:
+          id: stairlift_direction
+          value: '2'
+    turn_off_action:
+      - globals.set:
+          id: stairlift_direction
+          value: '0'
+      - switch.template.publish:
+          id: stairlift_down_switch
+          state: OFF

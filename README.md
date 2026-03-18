@@ -19,12 +19,15 @@ By moving away from the Home Assistant ESPHome Add-on, this project allows for:
 ├── common/
 │   ├── base.yaml              # Shared board, framework, logger, API, and OTA config
 │   ├── wifi.yaml              # WiFi + captive portal template (uses substitutions)
-│   └── test-hardware.yaml     # AtomS3 Lite LED and button hardware test config
+│   └── test-leds.yaml         # AtomS3 Lite LED and button hardware test config
 ├── roles/
 │   ├── bluetooth-proxy.yaml   # Bluetooth proxy role
-│   └── remote-receiver.yaml   # IR remote receiver role
+│   ├── remote-receiver.yaml   # IR remote receiver role
+│   ├── stairlift-control.yaml # Stairlift UP/DOWN via Home Assistant (no button)
+│   └── stairlift-test.yaml    # Stairlift UP/DOWN — local button test role (no HA)
 ├── esp32-01.yaml              # Device: esp32-01 (192.168.1.22)
 ├── esp32-02.yaml              # Device: esp32-02 (192.168.1.23)
+├── STAIRLIFT_CODES.md         # Captured IR pronto/raw codes for the stairlift remote
 ├── secrets.yaml               # (NOT IN GIT) WiFi and API credentials
 └── README.md
 ```
@@ -45,7 +48,7 @@ esphome:
 packages:
   base: !include common/base.yaml
   wifi: !include common/wifi.yaml
-  role: !include roles/bluetooth-proxy.yaml
+  role: !include roles/stairlift-control.yaml
 ```
 
 To repurpose a device, change the `role:` package reference to point at a different file under `roles/`.

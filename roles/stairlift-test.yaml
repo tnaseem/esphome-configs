@@ -1,0 +1,110 @@
+# Stairlift control — WITH physical button for local testing.
+# Use this role when you want to test the stairlift without Home Assistant.
+#
+# IR transmitter: KY-005 (HW-483) on Grove port, S → GPIO2.
+#
+# Confirmed working IR codes (38 kHz, raw timings in µs, positive = mark):
+#   DOWN: [851, -1919, 462, -992, 851]
+#   UP:   [852, -1918, 462, -1917, 461]
+#
+# Button (GPIO41) cycles: START-DOWN → STOP-DOWN → START-UP → STOP-UP → …
+remote_transmitter:
+  pin: GPIO2
+  carrier_duty_percent: 50%
+
+globals:
+  # 0 = stopped, 1 = up, 2 = down
+  - id: stairlift_direction
+    type: int
+    restore_value: no
+    initial_value: '0'
+  # 0 → start DOWN, 1 → stop DOWN, 2 → start UP, 3 → stop UP, back to 0
+  - id: cycle_step
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+interval:
+  - interval: 35ms
+    then:
+      - if:
+          condition:
+            lambda: 'return id(stairlift_direction) == 1;'
+          then:
+            - remote_transmitter.transmit_raw:
+                carrier_frequency: 38kHz
+                code: [852, -1918, 462, -1917, 461]
+      - if:
+          condition:
+            lambda: 'return id(stairlift_direction) == 2;'
+          then:
+            - remote_transmitter.transmit_raw:
+                carrier_frequency: 38kHz
+                code: [851, -1919, 462, -992, 851]
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO41
+      mode: INPUT_PULLUP
+      inverted: true
+    name: "Stairlift Button"
+    filters:
+      - delayed_on: 50ms
+      - delayed_off: 50ms
+    on_press:
+      then:
+        - lambda: |-
+            int step = id(cycle_step);
+            id(cycle_step) = (step + 1) % 4;
+            switch (step) {
+              case 0: id(stairlift_down_switch).turn_on();  break;
+              case 1: id(stairlift_down_switch).turn_off(); break;
+              case 2: id(stairlift_up_switch).turn_on();    break;
+              case 3: id(stairlift_up_switch).turn_off();   break;
+            }
+
+switch:
+  - platform: template
+    name: "Stairlift Up"
+    id: stairlift_up_switch
+    turn_on_action:
+      - globals.set:          # silence transmitter immediately
+          id: stairlift_direction
+          value: '0'
+      - switch.turn_off: stairlift_down_switch
+      - delay: 50ms
+      - globals.set:
+          id: stairlift_direction
+          value: '1'
+      - logger.log: "Stairlift Up: started"
+    turn_off_action:
+      - globals.set:
+          id: stairlift_direction
+          value: '0'
+      - logger.log: "Stairlift Up: stopped"
+      - switch.template.publish:
+          id: stairlift_up_switch
+          state: OFF
+
+  - platform: template
+    name: "Stairlift Down"
+    id: stairlift_down_switch
+    turn_on_action:
+      - globals.set:          # silence transmitter immediately
+          id: stairlift_direction
+          value: '0'
+      - switch.turn_off: stairlift_up_switch
+      - delay: 50ms
+      - globals.set:
+          id: stairlift_direction
+          value: '2'
+      - logger.log: "Stairlift Down: started"
+    turn_off_action:
+      - globals.set:
+          id: stairlift_direction
+          value: '0'
+      - logger.log: "Stairlift Down: stopped"
+      - switch.template.publish:
+          id: stairlift_down_switch
+          state: OFF

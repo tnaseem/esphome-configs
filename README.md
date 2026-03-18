@@ -40,6 +40,7 @@ Detailed documentation is in the [`docs/`](docs/) folder:
 |----------|-------------|
 | [`docs/architecture/overview.md`](docs/architecture/overview.md) | Package layers, GPIO map, flashing, secrets |
 | [`docs/features/stairlift-control.md`](docs/features/stairlift-control.md) | Stairlift IR control — HA switches and button test role |
+| [`docs/features/ir-capture.md`](docs/features/ir-capture.md) | IR code capture with KY-022 — how the stairlift codes were obtained |
 | [`docs/features/hardware-test.md`](docs/features/hardware-test.md) | LED and button hardware smoke-test package |
 | [`docs/devices/esp32-01.md`](docs/devices/esp32-01.md) | esp32-01 device summary (stairlift control) |
 | [`docs/devices/esp32-02.md`](docs/devices/esp32-02.md) | esp32-02 device summary (Bluetooth proxy) |
@@ -83,7 +84,7 @@ The `secrets.yaml` file is not tracked in Git. It must contain:
 ```yaml
 wifi_ssid: "your-ssid"
 wifi_password: "your-wifi-password"
-fallback_password: "your-fallback-password"
-api_encryption_key: "your-api-key"
+fallback_password: "your-fallback-hotspot-password"
+api_encryption_key: "your-32-byte-base64-api-key"
 ota_password: "your-ota-password"
 ```

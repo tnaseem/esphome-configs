@@ -9,4 +9,4 @@ esphome:
 packages:
   base: !include common/base.yaml
   wifi: !include common/wifi.yaml
-  role: !include roles/bluetooth-proxy.yaml
+  role: !include roles/remote-receiver.yaml
